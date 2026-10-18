@@ -71,8 +71,8 @@ docker compose --profile prod up -d --build
   bot, et le tunnel existant le joint sous le nom `olydiscord`.
 - **Tunnel dédié** : mets `TUNNEL_TOKEN` dans `.env` et ajoute `--profile tunnel` à la commande.
 
-Dans Cloudflare Zero Trust → Tunnels → le tunnel → *Public Hostname* : `oly.olycity.fr` → `HTTP` → `olydiscord:8787`.
-Pense aussi à la redirection OAuth `https://oly.olycity.fr/auth/callback` dans le portail Discord.
+Dans Cloudflare Zero Trust → Tunnels → le tunnel → *Public Hostname* : `discord.olycity.fr` → `HTTP` → `olydiscord:8787`.
+Pense aussi à la redirection OAuth `https://discord.olycity.fr/auth/callback` dans le portail Discord.
 
 Mise à jour du serveur sur la box :
 
