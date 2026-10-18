@@ -66,7 +66,19 @@ mkdir -p data && sudo chown 1000:1000 data   # le conteneur tourne en utilisateu
 docker compose --profile prod up -d --build
 ```
 
-Dans Cloudflare Zero Trust → Tunnels : ajoute un nom public (ex. `oly.ton-domaine.fr`) → `http://olydiscord:8787`.
+- **Tunnel Cloudflare déjà en place** sur la machine (cas du mini-PC `ak1`, qui fait tourner le bot musique) : copie
+  `docker-compose.override.example.yml` en `docker-compose.override.yml`. Le serveur rejoint alors le réseau Docker du
+  bot, et le tunnel existant le joint sous le nom `olydiscord`.
+- **Tunnel dédié** : mets `TUNNEL_TOKEN` dans `.env` et ajoute `--profile tunnel` à la commande.
+
+Dans Cloudflare Zero Trust → Tunnels → le tunnel → *Public Hostname* : `oly.olycity.fr` → `HTTP` → `olydiscord:8787`.
+Pense aussi à la redirection OAuth `https://oly.olycity.fr/auth/callback` dans le portail Discord.
+
+Mise à jour du serveur sur la box :
+
+```bash
+cd /root/olydiscord && git pull && cd server && docker compose --profile prod up -d --build
+```
 
 ### Gestion du stockage
 

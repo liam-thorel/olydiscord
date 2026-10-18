@@ -1,0 +1,11 @@
+# Réutiliser un Cloudflare Tunnel déjà lancé par un autre projet Docker (ex. le bot musique sur la même machine).
+# Copie ce fichier en docker-compose.override.yml (lu automatiquement par docker compose, ignoré par git),
+# remplace le nom du réseau, puis dans Cloudflare ajoute au tunnel existant : nom public → http://olydiscord:8787
+services:
+  olydiscord:
+    networks: [default, tunnel]
+
+networks:
+  tunnel:
+    external: true
+    name: discord-music-bot_default # `docker network ls` pour trouver celui du projet qui a cloudflared

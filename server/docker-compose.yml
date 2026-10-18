@@ -1,5 +1,8 @@
 # Développement : `npm run dev` (pas besoin de Docker)
 # Production    : `docker compose --profile prod up -d --build`
+#                 + `--profile tunnel` pour lancer son propre Cloudflare Tunnel (TUNNEL_TOKEN dans .env).
+#                 Pour passer par un tunnel déjà en place (ex. celui du bot musique), voir
+#                 docker-compose.override.example.yml.
 services:
   olydiscord:
     profiles: [prod]
@@ -17,7 +20,7 @@ services:
   # Expose PUBLIC_URL en HTTPS sans ouvrir de port sur la box.
   # Dans le tableau de bord Cloudflare : nom public → http://olydiscord:8787
   cloudflared:
-    profiles: [prod]
+    profiles: [tunnel]
     image: cloudflare/cloudflared:latest
     restart: unless-stopped
     command: tunnel --no-autoupdate run
