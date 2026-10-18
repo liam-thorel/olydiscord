@@ -1,6 +1,7 @@
 import fastifyCors from "@fastify/cors";
 import fastifyRateLimit from "@fastify/rate-limit";
 import fastifyStatic from "@fastify/static";
+import fastifyWebsocket from "@fastify/websocket";
 import Fastify, { type FastifyError } from "fastify";
 import { z } from "zod";
 import { isAdmin, registerAuthRoutes, requireUser } from "./auth.js";
@@ -10,6 +11,7 @@ import { db } from "./db.js";
 import { registerFileRoutes } from "./files.js";
 import { registerGuildRoutes } from "./guilds.js";
 import { registerProfileRoutes } from "./profiles.js";
+import { registerSoundRoutes } from "./sounds.js";
 import { BLOBS_DIR, diskStats, globalUsage } from "./storage.js";
 import { registerUploadRoutes } from "./uploads.js";
 import { httpError, HttpError } from "./util.js";
@@ -34,6 +36,7 @@ await app.register(fastifyRateLimit, {
 });
 
 await app.register(fastifyStatic, { root: BLOBS_DIR, serve: false });
+await app.register(fastifyWebsocket, { options: { maxPayload: 4096 } });
 
 app.setErrorHandler((err: FastifyError | HttpError | z.ZodError, req, reply) => {
   if (err instanceof HttpError) return reply.code(err.statusCode).send({ error: err.message, code: err.code });
@@ -50,6 +53,7 @@ registerUploadRoutes(app);
 registerFileRoutes(app);
 registerProfileRoutes(app);
 registerGuildRoutes(app);
+registerSoundRoutes(app);
 
 app.get("/health", async () => ({ ok: true }));
 

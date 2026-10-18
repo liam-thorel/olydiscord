@@ -116,6 +116,33 @@ export async function logout() {
 export const getMe = () => api<OlyMe>("/me");
 export const getMyFiles = () => api<OlyFile[]>("/me/files");
 export const deleteFile = (id: string) => api(`/files/${id}`, { method: "DELETE" });
+
+// ── Soundboard ──────────────────────────────────────────────────────────────
+
+export interface OlySound {
+    id: string;
+    name: string;
+    emoji: string | null;
+    /** null = son perso, jouable partout par son propriétaire */
+    guildId: string | null;
+    ownerId: string;
+    url: string;
+}
+
+export const getSounds = (guildIds: string[]) =>
+    api<{ personal: OlySound[]; guilds: Record<string, OlySound[]>; }>(`/sounds?guilds=${guildIds.join(",")}`);
+
+export function addSound(file: File, name: string, emoji: string, guildId: string | null) {
+    const query = new URLSearchParams({ name });
+    if (emoji) query.set("emoji", emoji);
+    if (guildId) query.set("guildId", guildId);
+    return api<OlySound>(`/sounds?${query}`, { method: "POST", body: file, headers: { "Content-Type": file.type || "audio/mpeg" } });
+}
+
+export const deleteSound = (id: string) => api(`/sounds/${id}`, { method: "DELETE" });
+
+/** Jeton courant, pour le WebSocket (qui s'authentifie dans son premier message) */
+export const getToken = () => token;
 export const extendFile = (id: string) => api<{ expiresAt: number; }>(`/files/${id}/extend`, { method: "POST" });
 
 // ── Profils des utilisateurs Oly ─────────────────────────────────────────────

@@ -42,17 +42,17 @@ const successText = (t: ImageTarget) =>
         : t.slot === "icon" ? "Icône OLYDISCORD du serveur mise à jour" : "Bannière OLYDISCORD du serveur mise à jour";
 
 /**
- * Envoie l'image ; si le serveur demande une nouvelle autorisation Discord (accès aux serveurs),
+ * Lance `action` ; si le serveur demande une nouvelle autorisation Discord (accès aux serveurs),
  * relance la connexion dans le navigateur puis réessaie une fois.
  */
-async function setImageWithReauth(target: ImageTarget, file: File | null, crop?: Parameters<typeof setImage>[2]) {
+export async function withReauth<T>(action: () => Promise<T>): Promise<T> {
     try {
-        await setImage(target, file, crop);
+        return await action();
     } catch (e) {
         if (!(e instanceof OlyError) || e.code !== "REAUTH") throw e;
         showToast({ text: "Autorise OLYDISCORD à voir tes serveurs dans ton navigateur…", variant: "default" });
         await login();
-        await setImage(target, file, crop);
+        return action();
     }
 }
 
@@ -72,7 +72,7 @@ export function chooseImage(target: ImageTarget, onDone?: () => void) {
                 file={file}
                 kind={cropKind(target)}
                 onConfirm={async crop => {
-                    await setImageWithReauth(target, file, crop);
+                    await withReauth(() => setImage(target, file, crop));
                     showToast({ text: successText(target), variant: "success" });
                     onDone?.();
                 }}
@@ -84,7 +84,7 @@ export function chooseImage(target: ImageTarget, onDone?: () => void) {
 
 export async function removeImage(target: ImageTarget, onDone?: () => void) {
     try {
-        await setImageWithReauth(target, null);
+        await withReauth(() => setImage(target, null));
         showToast({ text: "Image retirée", variant: "success" });
         onDone?.();
     } catch (e: any) {

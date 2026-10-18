@@ -403,3 +403,88 @@
     font-weight: 500;
     color: var(--header-primary, var(--text-default));
 }
+
+/* ── Soundboard ────────────────────────────────────────── */
+
+.oly-sb {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding-bottom: 8px;
+}
+
+.oly-sb-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.oly-sb-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 6px;
+}
+
+.oly-sb-sound {
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    border-radius: 8px;
+    background: var(--background-mod-normal, var(--background-secondary));
+}
+
+.oly-sb-play {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    padding: 8px 10px;
+    border: none;
+    background: none;
+    color: var(--text-default);
+    font-size: 14px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.oly-sb-play:hover {
+    background: var(--background-mod-strong, rgb(255 255 255 / 6%));
+}
+
+.oly-sb-emoji {
+    font-size: 18px;
+}
+
+.oly-sb-icon {
+    padding: 8px 6px;
+    border: none;
+    background: none;
+    color: var(--interactive-normal);
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.oly-sb-icon:hover {
+    color: var(--interactive-hover);
+}
+
+.oly-sb-add {
+    padding-top: 12px;
+    border-top: 1px solid var(--border-subtle, rgb(255 255 255 / 8%));
+}
+
+.oly-input {
+    min-width: 0;
+    padding: 8px 10px;
+    border: 1px solid var(--border-subtle, transparent);
+    border-radius: 8px;
+    background: var(--input-background, var(--background-tertiary));
+    color: var(--text-default);
+    font-size: 14px;
+}
+
+.oly-input-emoji {
+    width: 48px;
+    text-align: center;
+}

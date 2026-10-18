@@ -9,7 +9,7 @@ import { db, type FileRow, transaction } from "./db.js";
 import { assertCapacity, storeBlob, tmpPath } from "./storage.js";
 import { httpError, randomId } from "./util.js";
 
-export type ImageKind = Exclude<FileRow["kind"], "upload">;
+export type ImageKind = Exclude<FileRow["kind"], "upload" | "sound">;
 
 /** Image de profil Oly : à qui elle appartient et dans quelle colonne elle est rangée */
 export interface ImageTarget {

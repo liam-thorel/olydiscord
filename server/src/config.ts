@@ -34,6 +34,11 @@ const schema = z.object({
   MAX_PROFILE_IMAGE_MB: z.coerce.number().positive().default(15),
   /** Envoi commencé mais jamais terminé : supprimé après ce délai */
   STALE_UPLOAD_HOURS: z.coerce.number().positive().default(24),
+
+  // ── Soundboard ───────────────────────────────────────────
+  SOUND_MAX_KB: z.coerce.number().positive().default(1024),
+  MAX_PERSONAL_SOUNDS: z.coerce.number().int().positive().default(50),
+  MAX_GUILD_SOUNDS: z.coerce.number().int().positive().default(100),
 });
 
 const parsed = schema.safeParse(process.env);
@@ -56,4 +61,5 @@ export const config = {
   chunkSize: Math.floor(env.CHUNK_SIZE_MB * MB),
   maxProfileImage: env.MAX_PROFILE_IMAGE_MB * MB,
   staleUploadMs: env.STALE_UPLOAD_HOURS * 3600_000,
+  soundMaxSize: env.SOUND_MAX_KB * 1024,
 };

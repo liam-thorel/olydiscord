@@ -6,13 +6,20 @@ import { clearImage, type ImageTarget, saveImage } from "./profiles.js";
 import { httpError } from "./util.js";
 
 const ADMINISTRATOR = 0x8n;
-const MANAGE_GUILD = 0x20n;
+export const MANAGE_GUILD = 0x20n;
+export const MANAGE_GUILD_EXPRESSIONS = 1n << 30n;
+export const CREATE_GUILD_EXPRESSIONS = 1n << 43n;
+const ALL_PERMISSIONS = ~0n;
 const PERMISSION_CACHE_MS = 5 * 60_000;
 
-/** userId → (guildId → peut gérer) ; /users/@me/guilds est limité en débit, on évite de l'appeler à chaque envoi */
-const permissionCache = new Map<string, { at: number; guilds: Map<string, boolean> }>();
+/** userId → (guildId → permissions) ; /users/@me/guilds est limité en débit, on évite de l'appeler à chaque envoi */
+const permissionCache = new Map<string, { at: number; guilds: Map<string, bigint> }>();
 
-async function assertCanManageGuild(userId: string, guildId: string) {
+/**
+ * Vérifie que l'utilisateur a au moins une des permissions `anyOf` sur le serveur
+ * (propriétaire et administrateurs passent toujours).
+ */
+export async function assertGuildPermission(userId: string, guildId: string, anyOf: bigint, message: string) {
   let entry = permissionCache.get(userId);
   if (!entry || Date.now() - entry.at > PERMISSION_CACHE_MS) {
     const token = await getDiscordAccessToken(userId, "guilds");
@@ -33,15 +40,19 @@ async function assertCanManageGuild(userId: string, guildId: string) {
     entry = {
       at: Date.now(),
       guilds: new Map(
-        list.map(g => [g.id, g.owner || (BigInt(g.permissions) & (ADMINISTRATOR | MANAGE_GUILD)) !== 0n]),
+        list.map(g => {
+          const perms = BigInt(g.permissions);
+          return [g.id, g.owner || (perms & ADMINISTRATOR) !== 0n ? ALL_PERMISSIONS : perms];
+        }),
       ),
     };
     permissionCache.set(userId, entry);
   }
-  if (!entry.guilds.get(guildId)) {
-    throw httpError(403, "Il faut la permission « Gérer le serveur » pour changer son apparence OLYDISCORD.");
-  }
+  if (((entry.guilds.get(guildId) ?? 0n) & anyOf) === 0n) throw httpError(403, message);
 }
+
+const assertCanManageGuild = (userId: string, guildId: string) =>
+  assertGuildPermission(userId, guildId, MANAGE_GUILD, "Il faut la permission « Gérer le serveur » pour changer son apparence OLYDISCORD.");
 
 const guildTarget = (guildId: string, slot: "icon" | "banner"): ImageTarget => ({
   kind: slot === "icon" ? "guild_icon" : "guild_banner",

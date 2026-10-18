@@ -10,6 +10,7 @@ grâce à un serveur que tu héberges toi-même :
 | Icône et bannière animées d'un serveur, réglées dans Paramètres du serveur → Profil du serveur (permission « Gérer le serveur ») | Les voit | Voit l'icône Discord normale |
 | Icônes GIF de serveur toujours animées (Discord ne les anime qu'au survol) | Les voit | — |
 | Fichiers lourds (2 Go par défaut) | Pièce jointe intégrée : lecteur vidéo/audio, image, carte de téléchargement | Lien de téléchargement |
+| Soundboard Oly : sons perso (utilisables partout) et sons de serveur, sans limite de boost | Les entend dans son salon vocal | N'entend rien |
 | Badge « Utilisateur OLYDISCORD » | Le voit | — |
 
 Rien ne passe par les serveurs de Discord : pas de faux Nitro, juste une couche en plus.
@@ -98,6 +99,8 @@ Dans Cloudflare Zero Trust → Tunnels : ajoute un nom public (ex. `oly.ton-doma
 | `GET /files/:id`, `DELETE /files/:id`, `POST /files/:id/extend` | Métadonnées, suppression, prolongation |
 | `PUT/DELETE /me/avatar`, `PUT/DELETE /me/banner`, `GET /profiles` | Profils Oly (utilisateurs et serveurs), recadrage via `?x=&y=&w=&h=` |
 | `PUT/DELETE /guilds/:id/icon`, `PUT/DELETE /guilds/:id/banner` | Icône/bannière Oly d'un serveur (vérifie « Gérer le serveur » via Discord, sinon `403 REAUTH`) |
+| `GET /sounds?guilds=…`, `POST /sounds?name=&emoji=&guildId=`, `DELETE /sounds/:id` | Soundboard : sons perso et de serveur (ajout sur un serveur avec « Créer des expressions ») |
+| `GET /ws` (WebSocket) | Temps réel : le client s'authentifie dans son premier message, indique son salon vocal ; les sons joués sont relayés aux utilisateurs Oly du même salon (3 sons / 5 s max) |
 
 ## 2. Client
 
@@ -157,6 +160,7 @@ git merge upstream/main
 - L'icône/bannière Oly d'un serveur ne remplace que celles qui existent déjà sur Discord : un serveur sans icône garde ses initiales.
 - Discord affiche aussi son propre aperçu du lien Oly en plus de la pièce jointe → masquer l'embed pour les liens Oly.
 - Glisser-déposer / coller un gros fichier passe encore par Discord → intercepter au-delà de la limite Discord.
+- Le soundboard Oly n'est entendu que par les utilisateurs Oly : les sons ne passent pas par la voix Discord. Il a son propre bouton (barre de saisie) au lieu d'être intégré au soundboard de Discord.
 - Pas encore de miniatures vidéo, d'emojis/stickers Oly ni de couleurs de profil (le champ `accentColor` existe déjà côté serveur).
 - Renommer l'interface (« Vencord » → « OLYDISCORD ») et l'installeur.
 

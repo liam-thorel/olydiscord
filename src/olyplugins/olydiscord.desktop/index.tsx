@@ -5,7 +5,7 @@
  */
 
 import { addProfileBadge, BadgePosition, type ProfileBadge, removeProfileBadge } from "@api/Badges";
-import { ChatBarButton, type ChatBarButtonFactory } from "@api/ChatButtons";
+import { addChatBarButton, ChatBarButton, type ChatBarButtonFactory, removeChatBarButton } from "@api/ChatButtons";
 import { definePluginSettings } from "@api/Settings";
 import ErrorBoundary from "@components/ErrorBoundary";
 import { UploadIcon } from "@components/Icons";
@@ -15,7 +15,9 @@ import { findFileLinks, guildProfiles, isOlyUser, loadToken, onAuthChange, profi
 import { OlyAttachment } from "./components/OlyAttachment";
 import { type DiscordField, type DiscordSection, OlyGuildSection, OlyProfileSection } from "./components/ProfileSection";
 import { SettingsPanel } from "./components/Settings";
+import { openSoundboard, SoundboardIcon } from "./components/Soundboard";
 import { patches } from "./patches";
+import { reportVoiceChannel, startRealtime, stopRealtime } from "./realtime";
 import styles from "./styles.css?managed";
 import { pickAndUpload } from "./upload";
 
@@ -40,6 +42,13 @@ const settings = definePluginSettings({
         type: OptionType.BOOLEAN,
         description: "Toujours animer les icônes et bannières GIF des serveurs (même non boostés)",
         default: true,
+    },
+    soundVolume: {
+        type: OptionType.SLIDER,
+        description: "Volume des sons du soundboard OLYDISCORD",
+        markers: [0, 25, 50, 75, 100],
+        stickToMarkers: false,
+        default: 60,
     },
     showBadge: {
         type: OptionType.BOOLEAN,
@@ -69,6 +78,17 @@ const UploadButton: ChatBarButtonFactory = ({ isMainChat }) => {
         </ChatBarButton>
     );
 };
+
+const SoundboardButton: ChatBarButtonFactory = ({ isMainChat }) => {
+    if (!isMainChat) return null;
+    return (
+        <ChatBarButton tooltip="Soundboard OLYDISCORD" onClick={openSoundboard}>
+            <SoundboardIcon />
+        </ChatBarButton>
+    );
+};
+
+const soundVolume = () => settings.store.soundVolume / 100;
 
 let refreshTimer: ReturnType<typeof setInterval> | undefined;
 let unsubscribeAuth: (() => void) | undefined;
@@ -144,18 +164,32 @@ const plugin = definePlugin({
         );
     },
 
+    flux: {
+        // rejoindre/quitter un salon vocal : le serveur Oly sait à qui relayer les sons
+        VOICE_CHANNEL_SELECT({ channelId }: { channelId: string | null; }) {
+            reportVoiceChannel(channelId);
+        },
+    },
+
     async start() {
         addProfileBadge(badge);
+        addChatBarButton("olydiscord-soundboard", SoundboardButton, SoundboardIcon);
         await loadToken();
         await refreshProfiles();
-        unsubscribeAuth = onAuthChange(() => void refreshProfiles());
+        startRealtime(soundVolume);
+        unsubscribeAuth = onAuthChange(() => {
+            void refreshProfiles();
+            startRealtime(soundVolume);
+        });
         refreshTimer = setInterval(refreshProfiles, PROFILE_REFRESH_MS);
     },
 
     stop() {
         removeProfileBadge(badge);
+        removeChatBarButton("olydiscord-soundboard");
         clearInterval(refreshTimer);
         unsubscribeAuth?.();
+        stopRealtime();
     },
 });
 

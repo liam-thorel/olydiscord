@@ -76,6 +76,8 @@ export const CspPolicies: PolicyMap = {
 
     // OLYDISCORD : API, avatars/bannières et lecture des fichiers envoyés via Oly
     [new URL(OLY_SERVER_URL).origin]: ImageAndMediaSrc,
+    // WebSocket du soundboard Oly (ws:// ou wss:// selon l'URL du serveur)
+    [new URL(OLY_SERVER_URL).origin.replace(/^http/, "ws")]: ConnectSrc,
 };
 
 const findHeader = (headers: PolicyMap, headerName: Lowercase<string>) => {

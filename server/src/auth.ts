@@ -62,7 +62,12 @@ export async function getDiscordAccessToken(userId: string, scope: string): Prom
 export function getUser(req: FastifyRequest): AuthUser | null {
   const header = req.headers.authorization;
   if (!header?.startsWith("Bearer ")) return null;
-  const hash = sha256(header.slice(7).trim());
+  return userFromToken(header.slice(7).trim());
+}
+
+/** Utilisateur d'un jeton API Oly (aussi utilisé par le WebSocket, qui ne peut pas envoyer d'en-tête) */
+export function userFromToken(token: string): AuthUser | null {
+  const hash = sha256(token);
   const row = db
     .prepare(
       `SELECT u.id, u.username, t.last_used_at FROM tokens t JOIN users u ON u.id = t.user_id WHERE t.hash = ?`,

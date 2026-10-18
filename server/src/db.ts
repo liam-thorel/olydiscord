@@ -44,7 +44,7 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS files (
     id          TEXT PRIMARY KEY,           -- identifiant public, non devinable
     owner_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    kind        TEXT NOT NULL,              -- 'upload' | 'avatar' | 'banner' | 'guild_icon' | 'guild_banner'
+    kind        TEXT NOT NULL,              -- 'upload' | 'avatar' | 'banner' | 'guild_icon' | 'guild_banner' | 'sound'
     name        TEXT NOT NULL,
     mime        TEXT NOT NULL,
     size        INTEGER NOT NULL,
@@ -92,6 +92,19 @@ db.exec(`
     updated_at    INTEGER NOT NULL
   );
 
+  -- Sons du soundboard Oly : personnels (guild_id NULL) ou partagés sur un serveur
+  CREATE TABLE IF NOT EXISTS sounds (
+    id          TEXT PRIMARY KEY,
+    owner_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    guild_id    TEXT,
+    name        TEXT NOT NULL,
+    emoji       TEXT,
+    file_id     TEXT NOT NULL REFERENCES files(id) ON DELETE CASCADE,
+    created_at  INTEGER NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS sounds_owner ON sounds(owner_id, guild_id);
+  CREATE INDEX IF NOT EXISTS sounds_guild ON sounds(guild_id);
+
   CREATE TABLE IF NOT EXISTS profiles (
     user_id       TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     avatar_file   TEXT REFERENCES files(id) ON DELETE SET NULL,
@@ -116,7 +129,7 @@ export function transaction<T>(fn: () => T): T {
 export interface FileRow {
   id: string;
   owner_id: string;
-  kind: "upload" | "avatar" | "banner" | "guild_icon" | "guild_banner";
+  kind: "upload" | "avatar" | "banner" | "guild_icon" | "guild_banner" | "sound";
   name: string;
   mime: string;
   size: number;
