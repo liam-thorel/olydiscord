@@ -27,8 +27,10 @@ Cloudflare Tunnel (https://oly.ton-domaine)
 
 - `src/olyplugins/olydiscord.desktop/` : le plugin (client)
   - `api.ts` : appels au serveur, connexion, envoi en morceaux
-  - `index.tsx` : patchs Discord (avatar, bannière), bouton d'envoi, rendu des pièces jointes, badge
-  - `components/` : réglages (compte, PP/bannière, stockage, mes fichiers) et pièces jointes
+  - `patches.ts` : patchs du code de Discord (avatar, bannière, icônes de serveur, sections des éditeurs de profil)
+  - `index.tsx` : branchement des patchs, bouton d'envoi, rendu des pièces jointes, badge
+  - `components/` : réglages, recadrage, sections OLYDISCORD des éditeurs de profil et pièces jointes
+- `scripts/olyCheckPatches.mjs` : vérifie les patchs contre le code actuel de Discord
 - `server/` : le serveur Oly
 - `oly.config.json` : URL du serveur, intégrée au client **au moment du build**
 - Le reste est Vencord. `upstream` = Vencord officiel, `origin` = ton fork.
@@ -118,9 +120,29 @@ npx pnpm@11.9.0 inject
 
 ### Après une mise à jour de Discord
 
-Les patchs de `index.tsx` dépendent du code de Discord. S'ils ne s'appliquent plus, la console Vencord le signale
-(*Patch by OLYDISCORD had no effect*). Vencord fournit un outil pour tester tous les patchs : `pnpm buildReporter`,
-voir la doc Vencord.
+- **Appli Discord mise à jour** (nouveau dossier `app-1.0.xxxx`) : Vencord se réinstalle tout seul dedans au démarrage suivant.
+- **Code de Discord modifié** : les patchs de `patches.ts` repèrent des morceaux précis du code minifié de Discord. S'ils
+  ne correspondent plus, la fonctionnalité concernée disparaît (Discord continue de marcher) et la console Vencord affiche
+  *Patch by OLYDISCORD had no effect*.
+
+Pour le savoir sans attendre :
+
+```bash
+node scripts/olyCheckPatches.mjs
+```
+
+Le script télécharge le client web de Discord (environ 6 000 fichiers, gardés en cache dans le dossier temporaire),
+vérifie que chaque `find` désigne un seul module, que chaque `match` s'applique (sur toutes les copies d'un module),
+et que le code patché reste valide. Il affiche un rapport et sort en erreur si un patch est cassé. Le code de Discord est
+seulement analysé, jamais exécuté.
+
+Le workflow GitHub `.github/workflows/oly-patch-check.yml` le lance **chaque jour** : en cas de casse, il ouvre (ou complète)
+l'issue « Patchs OLYDISCORD cassés par une mise à jour de Discord » avec le rapport, et la ferme quand tout redevient valide.
+Il vérifie la branche `feat/olydiscord` (variable `OLY_REF`). GitHub ne planifie que les workflows présents sur la branche par
+défaut : le fichier doit donc être sur `main` pour tourner chaque jour, sinon on le lance à la main (*Actions → Patchs
+OLYDISCORD → Run workflow*).
+
+Pour réparer : corrige le motif dans `patches.ts` (le rapport indique lequel), relance le script, puis `pnpm build`.
 
 ### Récupérer les mises à jour de Vencord
 
