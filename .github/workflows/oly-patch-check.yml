@@ -1,0 +1,79 @@
+# Vérifie chaque jour que les patchs OLYDISCORD s'appliquent toujours au code actuel de Discord.
+# En cas de casse : ouvre (ou met à jour) une issue avec le rapport ; quand tout redevient valide, la ferme.
+#
+# GitHub ne lance les tâches planifiées que depuis la branche par défaut : ce fichier doit être sur `main`.
+name: Patchs OLYDISCORD
+on:
+    schedule:
+        - cron: "17 6 * * *" # tous les jours vers 8 h (heure de Paris)
+    workflow_dispatch:
+        inputs:
+            ref:
+                type: string
+                description: "Branche, tag ou commit à vérifier"
+                required: false
+
+permissions:
+    contents: read
+    issues: write
+
+env:
+    # branche qui contient le plugin (à passer à `main` une fois feat/olydiscord fusionnée)
+    OLY_REF: ${{ inputs.ref || 'feat/olydiscord' }}
+    ISSUE_TITLE: "Patchs OLYDISCORD cassés par une mise à jour de Discord"
+
+jobs:
+    check:
+        if: github.repository == 'liam-thorel/olydiscord'
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v7
+              with:
+                  ref: ${{ env.OLY_REF }}
+
+            - uses: pnpm/action-setup@v6 # version de pnpm lue dans package.json
+
+            - uses: actions/setup-node@v6
+              with:
+                  node-version: 24
+                  cache: "pnpm"
+
+            - name: Installer les dépendances
+              run: pnpm install --frozen-lockfile
+
+            - name: Vérifier les patchs
+              id: check
+              continue-on-error: true
+              run: node scripts/olyCheckPatches.mjs --report report.md
+
+            - name: Résumé
+              if: always()
+              run: cat report.md >> "$GITHUB_STEP_SUMMARY"
+
+            - name: Ouvrir ou mettre à jour l'issue
+              if: steps.check.outcome == 'failure'
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: |
+                  {
+                    cat report.md
+                    echo
+                    echo "Exécution : ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} (branche \`$OLY_REF\`)"
+                  } > body.md
+                  number=$(gh issue list --state open --search "in:title \"$ISSUE_TITLE\"" --json number --jq '.[0].number')
+                  if [ -n "$number" ]; then
+                    gh issue comment "$number" --body-file body.md
+                  else
+                    gh issue create --title "$ISSUE_TITLE" --body-file body.md
+                  fi
+                  exit 1
+
+            - name: Fermer l'issue si tout est réparé
+              if: steps.check.outcome == 'success'
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: |
+                  number=$(gh issue list --state open --search "in:title \"$ISSUE_TITLE\"" --json number --jq '.[0].number')
+                  if [ -n "$number" ]; then
+                    gh issue close "$number" --comment "Tous les patchs s'appliquent de nouveau ($(date -u +%F))."
+                  fi
