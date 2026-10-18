@@ -153,9 +153,8 @@ seulement analysé, jamais exécuté.
 
 Le workflow GitHub `.github/workflows/oly-patch-check.yml` le lance **chaque jour** : en cas de casse, il ouvre (ou complète)
 l'issue « Patchs OLYDISCORD cassés par une mise à jour de Discord » avec le rapport, et la ferme quand tout redevient valide.
-Il vérifie la branche `feat/olydiscord` (variable `OLY_REF`). GitHub ne planifie que les workflows présents sur la branche par
-défaut : le fichier doit donc être sur `main` pour tourner chaque jour, sinon on le lance à la main (*Actions → Patchs
-OLYDISCORD → Run workflow*).
+Il vérifie `main` (variable `OLY_REF`). On peut aussi le lancer à la main sur une autre branche :
+*Actions → Patchs OLYDISCORD → Run workflow*.
 
 Pour réparer : corrige le motif dans `patches.ts` (le rapport indique lequel), relance le script, puis `pnpm build`.
 

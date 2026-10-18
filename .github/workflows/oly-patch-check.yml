@@ -18,8 +18,8 @@ permissions:
     issues: write
 
 env:
-    # branche qui contient le plugin (à passer à `main` une fois feat/olydiscord fusionnée)
-    OLY_REF: ${{ inputs.ref || 'feat/olydiscord' }}
+    # branche qui contient le plugin
+    OLY_REF: ${{ inputs.ref || 'main' }}
     ISSUE_TITLE: "Patchs OLYDISCORD cassés par une mise à jour de Discord"
 
 jobs:
