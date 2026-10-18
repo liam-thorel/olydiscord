@@ -23,3 +23,6 @@ src/userplugins
 
 ExtensionCache/
 /settings
+
+# OLYDISCORD : le serveur utilise npm (lockfile nécessaire pour npm ci dans Docker)
+!server/package-lock.json

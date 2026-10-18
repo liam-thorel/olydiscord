@@ -73,6 +73,9 @@ export const CspPolicies: PolicyMap = {
     "*.tenor.com": ImageAndMediaSrc,
     "*.tenor.co": ImageAndMediaSrc,
     "*.giphy.com": ImageAndMediaSrc,
+
+    // OLYDISCORD : API, avatars/bannières et lecture des fichiers envoyés via Oly
+    [new URL(OLY_SERVER_URL).origin]: ImageAndMediaSrc,
 };
 
 const findHeader = (headers: PolicyMap, headerName: Lowercase<string>) => {

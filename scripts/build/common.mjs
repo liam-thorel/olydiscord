@@ -46,6 +46,9 @@ export const IS_REPORTER = process.argv.includes("--reporter");
 export const IS_ANTI_CRASH_TEST = process.argv.includes("--anti-crash-test");
 export const IS_STANDALONE = process.argv.includes("--standalone");
 
+// OLYDISCORD : URL du serveur Oly (variable OLY_SERVER_URL, sinon oly.config.json)
+export const OLY_SERVER_URL = (process.env.OLY_SERVER_URL || JSON.parse(readFileSync("oly.config.json", "utf-8")).serverUrl).replace(/\/+$/, "");
+
 export const IS_UPDATER_DISABLED = process.argv.includes("--disable-updater");
 export const gitHash = process.env.VENCORD_HASH || execSync("git rev-parse --short HEAD", { encoding: "utf-8" }).trim();
 
@@ -145,7 +148,7 @@ export const globPlugins = kind => ({
         });
 
         build.onLoad({ filter, namespace: "import-plugins" }, async () => {
-            const pluginDirs = ["plugins/_api", "plugins/_core", "plugins", "userplugins"];
+            const pluginDirs = ["plugins/_api", "plugins/_core", "plugins", "olyplugins", "userplugins"];
             let code = "";
             let pluginsCode = "\n";
             let metaCode = "\n";

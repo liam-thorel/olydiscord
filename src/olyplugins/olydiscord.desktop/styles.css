@@ -1,0 +1,232 @@
+/* ── Pièces jointes ─────────────────────────────────────── */
+
+.oly-attachments {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.oly-attachment {
+    max-width: min(520px, 100%);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--background-secondary);
+    border: 1px solid var(--border-subtle, transparent);
+}
+
+.oly-attachment-loading {
+    height: 64px;
+    opacity: 0.5;
+}
+
+.oly-attachment-gone {
+    padding: 12px 16px;
+    color: var(--text-muted);
+}
+
+.oly-media {
+    display: block;
+    max-width: 100%;
+    max-height: 400px;
+    background: #000;
+}
+
+.oly-audio audio {
+    display: block;
+    width: 100%;
+}
+
+.oly-attachment-footer {
+    padding: 4px 10px 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.oly-file-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+}
+
+.oly-file-icon {
+    font-size: 28px;
+}
+
+.oly-file-meta {
+    flex: 1;
+    min-width: 0;
+}
+
+.oly-file-name {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text-link);
+}
+
+.oly-file-size {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.oly-file-download {
+    font-size: 20px;
+    color: var(--interactive-normal);
+    text-decoration: none;
+}
+
+.oly-file-download:hover {
+    color: var(--interactive-hover);
+}
+
+/* ── Progression des envois ────────────────────────────── */
+
+#oly-uploads {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 300px;
+}
+
+.oly-upload {
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: var(--background-floating, #111214);
+    color: var(--text-default, #dbdee1);
+    box-shadow: 0 8px 16px rgb(0 0 0 / 24%);
+    font-size: 13px;
+}
+
+.oly-upload-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.oly-upload-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 600;
+}
+
+.oly-upload-cancel {
+    background: none;
+    border: none;
+    color: var(--interactive-normal);
+    cursor: pointer;
+}
+
+.oly-upload-bar,
+.oly-quota {
+    height: 6px;
+    margin: 8px 0 6px;
+    border-radius: 3px;
+    background: var(--background-modifier-accent, rgb(255 255 255 / 10%));
+    overflow: hidden;
+}
+
+.oly-upload-fill,
+.oly-quota-fill {
+    height: 100%;
+    width: 0;
+    background: #7c3aed;
+    transition: width 0.2s;
+}
+
+.oly-upload-status {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* ── Réglages ──────────────────────────────────────────── */
+
+.oly-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.oly-settings-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.oly-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.oly-column {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.oly-grow {
+    flex: 1;
+}
+
+.oly-muted {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.oly-warning {
+    color: var(--status-warning, #f0b232);
+}
+
+.oly-ellipsis {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.oly-profile-image {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.oly-preview {
+    flex-shrink: 0;
+    background: var(--background-tertiary) center / cover no-repeat;
+}
+
+.oly-preview-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+}
+
+.oly-preview-banner {
+    width: 160px;
+    height: 64px;
+    border-radius: 8px;
+}
+
+.oly-files {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.oly-file-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: var(--background-secondary);
+}
