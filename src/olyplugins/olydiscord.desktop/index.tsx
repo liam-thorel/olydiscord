@@ -97,6 +97,8 @@ const plugin = definePlugin({
     name: "OLYDISCORD",
     description: "PP et bannière animées, gros fichiers via ton serveur : visibles par les autres utilisateurs d'OLYDISCORD",
     authors: [{ name: "Liam", id: 0n }],
+    // activé dès l'installation chez un ami (on peut toujours le désactiver)
+    enabledByDefault: true,
     settings,
     managedStyle: styles,
 

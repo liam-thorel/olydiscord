@@ -1,0 +1,69 @@
+# Compile OLYDISCORD (version « standalone », qui se met à jour toute seule) et publie la release « olydiscord ».
+#  - l'installeur (scripts/install-olydiscord.ps1) télécharge les fichiers de cette release ;
+#  - le Vencord Updater des amis compare le hash à la fin du titre de la release avec le sien,
+#    et télécharge les nouveaux fichiers quand il change.
+name: Release OLYDISCORD
+on:
+    push:
+        branches: [main]
+        paths:
+            - .github/workflows/oly-release.yml
+            - src/**
+            - scripts/build/**
+            - scripts/install-olydiscord.ps1
+            - scripts/*-OLYDISCORD.cmd
+            - oly.config.json
+            - package.json
+            - pnpm-lock.yaml
+    workflow_dispatch:
+
+permissions:
+    contents: write
+
+env:
+    TAG: olydiscord
+
+jobs:
+    release:
+        if: github.repository == 'liam-thorel/olydiscord'
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v7
+
+            - uses: pnpm/action-setup@v6 # version de pnpm lue dans package.json
+
+            - uses: actions/setup-node@v6
+              with:
+                  node-version: 24
+                  cache: "pnpm"
+
+            - name: Installer les dépendances
+              run: pnpm install --frozen-lockfile
+
+            # standalone = mise à jour par les releases GitHub (et non par git, réservé à l'installation de dév)
+            - name: Compiler
+              run: pnpm build --standalone
+
+            - name: Préparer les fichiers
+              run: |
+                  mkdir release
+                  cp dist/patcher.js dist/preload.js dist/renderer.js dist/renderer.css release/
+                  cp scripts/install-olydiscord.ps1 scripts/Installer-OLYDISCORD.cmd scripts/Desinstaller-OLYDISCORD.cmd release/
+
+            - name: Publier la release
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: |
+                  hash=$(git rev-parse --short HEAD)
+                  title="OLYDISCORD $hash" # le dernier mot doit être le hash : c'est ce que lit le Vencord Updater
+                  notes="Pour installer : télécharge **Installer-OLYDISCORD.cmd** ci-dessous et double-clique dessus (Discord doit être installé).
+
+                  Les mises à jour arrivent ensuite toutes seules (Paramètres → Vencord → Updater).
+
+                  Compilé depuis ${{ github.sha }}."
+                  if gh release view "$TAG" > /dev/null 2>&1; then
+                      gh release upload "$TAG" --clobber release/*
+                      gh release edit "$TAG" --title "$title" --notes "$notes" --latest
+                  else
+                      gh release create "$TAG" release/* --target "$GITHUB_SHA" --title "$title" --notes "$notes" --latest
+                  fi

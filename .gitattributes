@@ -1,1 +1,5 @@
 * text=auto eol=lf
+
+# OLYDISCORD : scripts Windows téléchargés tels quels par les amis
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
