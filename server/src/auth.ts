@@ -11,6 +11,52 @@ export interface AuthUser {
 
 const LOGIN_TTL_MS = 10 * 60_000;
 const redirectUri = `${config.PUBLIC_URL}/auth/callback`;
+const OAUTH_SCOPES = "identify guilds";
+
+interface DiscordTokenResponse {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  scope: string;
+}
+
+function saveDiscordToken(userId: string, t: DiscordTokenResponse) {
+  db.prepare(
+    `INSERT INTO discord_tokens (user_id, access_token, refresh_token, expires_at, scope) VALUES (?, ?, ?, ?, ?)
+     ON CONFLICT(user_id) DO UPDATE SET access_token = excluded.access_token, refresh_token = excluded.refresh_token,
+       expires_at = excluded.expires_at, scope = excluded.scope`,
+  ).run(userId, t.access_token, t.refresh_token, Date.now() + t.expires_in * 1000, t.scope);
+}
+
+/**
+ * Jeton OAuth Discord de l'utilisateur (renouvelé s'il a expiré), ou null s'il faut se reconnecter
+ * pour accorder `scope`.
+ */
+export async function getDiscordAccessToken(userId: string, scope: string): Promise<string | null> {
+  const row = db.prepare(`SELECT * FROM discord_tokens WHERE user_id = ?`).get(userId) as
+    | { access_token: string; refresh_token: string; expires_at: number; scope: string }
+    | undefined;
+  if (!row || !row.scope.split(" ").includes(scope)) return null;
+  if (row.expires_at - Date.now() > 60_000) return row.access_token;
+
+  const res = await fetch("https://discord.com/api/oauth2/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      client_id: config.DISCORD_CLIENT_ID,
+      client_secret: config.DISCORD_CLIENT_SECRET,
+      grant_type: "refresh_token",
+      refresh_token: row.refresh_token,
+    }),
+  });
+  if (!res.ok) {
+    db.prepare(`DELETE FROM discord_tokens WHERE user_id = ?`).run(userId);
+    return null;
+  }
+  const t = (await res.json()) as DiscordTokenResponse;
+  saveDiscordToken(userId, t);
+  return t.access_token;
+}
 
 /** Utilisateur du jeton « Authorization: Bearer … », ou null */
 export function getUser(req: FastifyRequest): AuthUser | null {
@@ -59,7 +105,8 @@ export function registerAuthRoutes(app: FastifyInstance) {
     url.searchParams.set("client_id", config.DISCORD_CLIENT_ID);
     url.searchParams.set("response_type", "code");
     url.searchParams.set("redirect_uri", redirectUri);
-    url.searchParams.set("scope", "identify");
+    // guilds : permet de vérifier qu'on administre un serveur avant de changer son icône Oly
+    url.searchParams.set("scope", OAUTH_SCOPES);
     url.searchParams.set("state", state);
     url.searchParams.set("prompt", "none");
     return { loginId: id, url: url.toString(), expiresIn: LOGIN_TTL_MS / 1000 };
@@ -93,7 +140,8 @@ export function registerAuthRoutes(app: FastifyInstance) {
       req.log.error({ body: await tokenRes.text() }, "Échec de l'échange du code OAuth2");
       return reply.code(502).send(page("Erreur", "Discord a refusé la connexion, réessaie."));
     }
-    const { access_token } = (await tokenRes.json()) as { access_token: string };
+    const discordToken = (await tokenRes.json()) as DiscordTokenResponse;
+    const { access_token } = discordToken;
     const meRes = await fetch("https://discord.com/api/users/@me", {
       headers: { Authorization: `Bearer ${access_token}` },
     });
@@ -118,6 +166,7 @@ export function registerAuthRoutes(app: FastifyInstance) {
       now,
       now,
     );
+    saveDiscordToken(me.id, discordToken);
     db.prepare(`UPDATE login_requests SET token = ?, user_id = ? WHERE id = ?`).run(token, me.id, login.id);
 
     return page("Connecté ✔", `Bienvenue sur OLYDISCORD, ${escapeHtml(username)} ! Tu peux fermer cet onglet et revenir sur Discord.`);

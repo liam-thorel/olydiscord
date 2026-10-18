@@ -6,7 +6,9 @@ grâce à un serveur que tu héberges toi-même :
 
 | Fonctionnalité | Utilisateur Oly | Utilisateur Discord normal |
 |---|---|---|
-| PP et bannière animées (GIF, APNG, WebP) | Les voit | Voit la PP Discord normale |
+| PP et bannière animées (GIF, WebP), recadrées à l'envoi, réglées depuis l'éditeur de profil de Discord | Les voit | Voit la PP Discord normale |
+| Icône et bannière animées d'un serveur, réglées dans Paramètres du serveur → Profil du serveur (permission « Gérer le serveur ») | Les voit | Voit l'icône Discord normale |
+| Icônes GIF de serveur toujours animées (Discord ne les anime qu'au survol) | Les voit | — |
 | Fichiers lourds (2 Go par défaut) | Pièce jointe intégrée : lecteur vidéo/audio, image, carte de téléchargement | Lien de téléchargement |
 | Badge « Utilisateur OLYDISCORD » | Le voit | — |
 
@@ -81,18 +83,19 @@ Dans Cloudflare Zero Trust → Tunnels : ajoute un nom public (ex. `oly.ton-doma
 - **Nettoyage** toutes les 10 min : fichiers expirés, envois abandonnés, fichiers temporaires orphelins,
   blobs plus utilisés. C'est à ce moment que le disque est réellement libéré.
 - **Suivi** : `GET /admin/stats` (IDs dans `ADMIN_USER_IDS`) donne le disque, l'espace stocké et le top des utilisateurs.
-- Les PP/bannières n'expirent pas et ne comptent pas dans le quota (15 Mo max chacune).
+- Les PP/bannières sont recadrées puis converties en WebP (512×512 et 1200×480, animation conservée pour GIF/WebP ; un APNG devient fixe). Elles n'expirent pas et ne comptent pas dans le quota (15 Mo max à l'envoi).
 
 ### API
 
 | Route | Rôle |
 |---|---|
-| `POST /auth/start`, `GET /auth/callback`, `GET /auth/poll/:id` | Connexion via le navigateur (OAuth Discord, scope `identify`) |
+| `POST /auth/start`, `GET /auth/callback`, `GET /auth/poll/:id` | Connexion via le navigateur (OAuth Discord, scopes `identify guilds` : `guilds` sert seulement à vérifier qui peut gérer un serveur) |
 | `GET /me`, `GET /me/files`, `DELETE /me` | Compte, quota, fichiers, suppression du compte |
 | `POST /uploads` → `PUT /uploads/:id/chunks/:n` → `POST /uploads/:id/complete` | Envoi en morceaux, parallèle et reprenable (`GET /uploads/:id`) |
 | `GET /f/:id/:nom` | Téléchargement public (lien non devinable), lecture vidéo avec avance rapide (Range) |
 | `GET /files/:id`, `DELETE /files/:id`, `POST /files/:id/extend` | Métadonnées, suppression, prolongation |
-| `PUT/DELETE /me/avatar`, `PUT/DELETE /me/banner`, `GET /profiles` | Profils Oly |
+| `PUT/DELETE /me/avatar`, `PUT/DELETE /me/banner`, `GET /profiles` | Profils Oly (utilisateurs et serveurs), recadrage via `?x=&y=&w=&h=` |
+| `PUT/DELETE /guilds/:id/icon`, `PUT/DELETE /guilds/:id/banner` | Icône/bannière Oly d'un serveur (vérifie « Gérer le serveur » via Discord, sinon `403 REAUTH`) |
 
 ## 2. Client
 
@@ -128,7 +131,8 @@ git merge upstream/main
 
 ## Limites connues / prochaines étapes
 
-- La PP Oly est toujours animée (pas de version fixe au repos) → générer une première image fixe côté serveur.
+- Les images Oly sont toujours animées (pas de version fixe au repos) → générer une première image fixe côté serveur.
+- L'icône/bannière Oly d'un serveur ne remplace que celles qui existent déjà sur Discord : un serveur sans icône garde ses initiales.
 - Discord affiche aussi son propre aperçu du lien Oly en plus de la pièce jointe → masquer l'embed pour les liens Oly.
 - Glisser-déposer / coller un gros fichier passe encore par Discord → intercepter au-delà de la limite Discord.
 - Pas encore de miniatures vidéo, d'emojis/stickers Oly ni de couleurs de profil (le champ `accentColor` existe déjà côté serveur).

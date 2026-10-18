@@ -18,12 +18,13 @@ export const randomToken = () => randomBytes(32).toString("base64url");
 export const sha256 = (s: string) => createHash("sha256").update(s).digest("hex");
 
 export class HttpError extends Error {
-  constructor(public statusCode: number, message: string) {
+  constructor(public statusCode: number, message: string, public code?: string) {
     super(message);
   }
 }
 
-export const httpError = (status: number, message: string) => new HttpError(status, message);
+/** `code` : identifiant stable que le client peut tester (ex. "REAUTH" : il faut se reconnecter) */
+export const httpError = (status: number, message: string, code?: string) => new HttpError(status, message, code);
 
 export function formatBytes(n: number): string {
   const units = ["o", "Ko", "Mo", "Go", "To"];

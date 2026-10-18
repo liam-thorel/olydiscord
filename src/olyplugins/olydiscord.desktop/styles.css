@@ -230,3 +230,176 @@
     border-radius: 6px;
     background: var(--background-secondary);
 }
+
+/* ── Recadrage ─────────────────────────────────────────── */
+
+.oly-crop {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 8px 0 4px;
+}
+
+.oly-crop-frame {
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+    background: var(--background-tertiary, #1e1f22);
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+}
+
+.oly-crop-frame:active {
+    cursor: grabbing;
+}
+
+.oly-crop-frame img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    max-width: none;
+    pointer-events: none;
+}
+
+/* assombrit les coins : forme de la PP (ronde) ou de l'icône de serveur (arrondie) dans Discord */
+.oly-crop-mask {
+    position: absolute;
+    inset: 0;
+    box-shadow: 0 0 0 9999px rgb(0 0 0 / 55%);
+    pointer-events: none;
+}
+
+.oly-crop-mask-circle {
+    border-radius: 50%;
+}
+
+.oly-crop-mask-rounded {
+    border-radius: 30%;
+}
+
+.oly-crop-zoom {
+    width: min(300px, 100%);
+    accent-color: #7c3aed;
+}
+
+/* ── Section OLYDISCORD de l'éditeur de profil ─────────── */
+
+.oly-tiles {
+    display: flex;
+    gap: 8px;
+}
+
+.oly-tile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100px;
+}
+
+.oly-tile-wide {
+    width: 208px;
+}
+
+.oly-tile-button {
+    position: relative;
+    height: 100px;
+    padding: 0;
+    overflow: hidden;
+    border: none;
+    border-radius: 8px;
+    background: var(--background-mod-normal, var(--background-secondary));
+    cursor: pointer;
+}
+
+.oly-tile-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.oly-tile-preview {
+    position: absolute;
+    inset: 0;
+    background: center / cover no-repeat;
+}
+
+.oly-tile-circle .oly-tile-preview {
+    inset: 14px;
+    border-radius: 50%;
+}
+
+.oly-tile-rounded .oly-tile-preview {
+    inset: 14px;
+    border-radius: 30%;
+}
+
+.oly-tile-wide .oly-tile-preview {
+    inset: 22px 8px;
+    border-radius: 6px;
+}
+
+.oly-tile-add {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    margin: auto;
+    border-radius: 50%;
+    background: var(--white-500, #fff);
+    color: #000;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.oly-tile-hover {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background: rgb(0 0 0 / 55%);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.oly-tile-button:not(:disabled):hover .oly-tile-hover {
+    opacity: 1;
+}
+
+.oly-tile-remove {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: rgb(0 0 0 / 70%);
+    color: #fff;
+    font-size: 11px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.oly-tile:hover .oly-tile-remove {
+    opacity: 1;
+}
+
+.oly-tile-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.oly-section-heading {
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--header-primary, var(--text-default));
+}

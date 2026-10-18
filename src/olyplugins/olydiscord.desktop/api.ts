@@ -6,6 +6,7 @@
 
 import * as DataStore from "@api/DataStore";
 import { Logger } from "@utils/Logger";
+import { GuildStore, UserStore } from "@webpack/common";
 
 export const SERVER = OLY_SERVER_URL;
 export const logger = new Logger("OLYDISCORD", "#a78bfa");
@@ -44,7 +45,8 @@ export interface OlyProfile {
 }
 
 export class OlyError extends Error {
-    constructor(message: string, public status: number) {
+    /** `code` : "REAUTH" quand il faut se reconnecter pour accorder une nouvelle autorisation */
+    constructor(message: string, public status: number, public code?: string) {
         super(message);
     }
 }
@@ -78,7 +80,7 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
     const res = await fetch(SERVER + path, { ...init, headers });
     const data = res.headers.get("content-type")?.includes("json") ? await res.json() : null;
     if (res.status === 401 && token) await setToken(null);
-    if (!res.ok) throw new OlyError(data?.error ?? `Erreur ${res.status} du serveur OLYDISCORD`, res.status);
+    if (!res.ok) throw new OlyError(data?.error ?? `Erreur ${res.status} du serveur OLYDISCORD`, res.status, data?.code);
     return data as T;
 }
 
@@ -118,27 +120,64 @@ export const extendFile = (id: string) => api<{ expiresAt: number; }>(`/files/${
 
 // ── Profils des utilisateurs Oly ─────────────────────────────────────────────
 
+export interface OlyGuildProfile {
+    icon: string | null;
+    banner: string | null;
+}
+
 export let profiles: Record<string, OlyProfile> = {};
+export let guildProfiles: Record<string, OlyGuildProfile> = {};
+const profileListeners = new Set<() => void>();
+
+export function onProfilesChange(fn: () => void) {
+    profileListeners.add(fn);
+    return () => void profileListeners.delete(fn);
+}
 
 export async function refreshProfiles() {
     if (!token) {
         profiles = {};
-        return;
+        guildProfiles = {};
+    } else {
+        try {
+            const res = await api<{ users: Record<string, OlyProfile>; guilds?: Record<string, OlyGuildProfile>; }>("/profiles");
+            profiles = res.users;
+            guildProfiles = res.guilds ?? {};
+        } catch (e) {
+            logger.warn("Impossible de récupérer les profils Oly", e);
+            return;
+        }
     }
-    try {
-        profiles = (await api<{ users: Record<string, OlyProfile>; }>("/profiles")).users;
-    } catch (e) {
-        logger.warn("Impossible de récupérer les profils Oly", e);
-    }
+    profileListeners.forEach(fn => fn());
+    // les avatars et icônes de Discord se réaffichent quand ces stores changent : ils reprennent ainsi l'URL Oly
+    (UserStore as any).emitChange?.();
+    (GuildStore as any).emitChange?.();
 }
 
 export const isOlyUser = (userId: string | undefined) => !!userId && userId in profiles;
 
-export async function setProfileImage(slot: "avatar" | "banner", file: File | null) {
+/** Zone à garder, en pixels de l'image d'origine */
+export interface CropRect {
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+}
+
+/** Image Oly à modifier : la sienne (PP, bannière) ou celle d'un serveur qu'on gère */
+export type ImageTarget =
+    | { type: "user"; slot: "avatar" | "banner"; }
+    | { type: "guild"; guildId: string; slot: "icon" | "banner"; };
+
+const targetPath = (t: ImageTarget) => t.type === "user" ? `/me/${t.slot}` : `/guilds/${t.guildId}/${t.slot}`;
+
+/** Le serveur recadre, redimensionne et convertit en WebP (l'animation est conservée) */
+export async function setImage(target: ImageTarget, file: File | null, crop?: CropRect) {
     if (file) {
-        await api(`/me/${slot}`, { method: "PUT", body: file, headers: { "Content-Type": file.type || "application/octet-stream" } });
+        const query = crop ? "?" + new URLSearchParams({ x: `${crop.x}`, y: `${crop.y}`, w: `${crop.w}`, h: `${crop.h}` }) : "";
+        await api(targetPath(target) + query, { method: "PUT", body: file, headers: { "Content-Type": file.type || "application/octet-stream" } });
     } else {
-        await api(`/me/${slot}`, { method: "DELETE" });
+        await api(targetPath(target), { method: "DELETE" });
     }
     await refreshProfiles();
 }

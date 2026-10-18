@@ -8,6 +8,7 @@ import { scheduleCleanup } from "./cleanup.js";
 import { config } from "./config.js";
 import { db } from "./db.js";
 import { registerFileRoutes } from "./files.js";
+import { registerGuildRoutes } from "./guilds.js";
 import { registerProfileRoutes } from "./profiles.js";
 import { BLOBS_DIR, diskStats, globalUsage } from "./storage.js";
 import { registerUploadRoutes } from "./uploads.js";
@@ -35,7 +36,7 @@ await app.register(fastifyRateLimit, {
 await app.register(fastifyStatic, { root: BLOBS_DIR, serve: false });
 
 app.setErrorHandler((err: FastifyError | HttpError | z.ZodError, req, reply) => {
-  if (err instanceof HttpError) return reply.code(err.statusCode).send({ error: err.message });
+  if (err instanceof HttpError) return reply.code(err.statusCode).send({ error: err.message, code: err.code });
   if (err instanceof z.ZodError) return reply.code(400).send({ error: z.prettifyError(err) });
   if ("statusCode" in err && err.statusCode && err.statusCode < 500) {
     return reply.code(err.statusCode).send({ error: err.message });
@@ -48,6 +49,7 @@ registerAuthRoutes(app);
 registerUploadRoutes(app);
 registerFileRoutes(app);
 registerProfileRoutes(app);
+registerGuildRoutes(app);
 
 app.get("/health", async () => ({ ok: true }));
 

@@ -8,20 +8,15 @@ import { Button } from "@components/Button";
 import { HeadingTertiary } from "@components/Heading";
 import { Paragraph } from "@components/Paragraph";
 import { copyWithToast } from "@utils/discord";
-import { showToast, useEffect, useRef, UserStore,useState } from "@webpack/common";
+import { showToast, useEffect, UserStore, useState } from "@webpack/common";
 
 import {
-    deleteFile, extendFile, formatBytes, getMe, getMyFiles, isLoggedIn, login, logout,
-type OlyFile, type OlyMe, onAuthChange, SERVER, setProfileImage,
+    deleteFile, extendFile, formatBytes, getMe, getMyFiles, login, logout,
+    type OlyFile, type OlyMe, SERVER,
 } from "../api";
+import { chooseProfileImage, type ProfileSlot, removeProfileImage, useOlyAuth } from "../profileImage";
 
 const fail = (e: any) => showToast({ text: e?.message ?? "Erreur OLYDISCORD", variant: "critical" });
-
-function useAuth() {
-    const [loggedIn, setLoggedIn] = useState(isLoggedIn());
-    useEffect(() => onAuthChange(() => setLoggedIn(isLoggedIn())), []);
-    return loggedIn;
-}
 
 function LoginPanel() {
     const [waiting, setWaiting] = useState<AbortController | null>(null);
@@ -55,45 +50,18 @@ function LoginPanel() {
     );
 }
 
-function ProfileImage({ slot, url, onChange }: { slot: "avatar" | "banner"; url: string | null; onChange(): void; }) {
-    const input = useRef<HTMLInputElement>(null);
-    const [busy, setBusy] = useState(false);
-
-    const apply = async (file: File | null) => {
-        setBusy(true);
-        try {
-            await setProfileImage(slot, file);
-            showToast({ text: file ? "Image mise à jour" : "Image retirée", variant: "success" });
-            onChange();
-        } catch (e) {
-            fail(e);
-        } finally {
-            setBusy(false);
-        }
-    };
-
+function ProfileImage({ slot, url, onChange }: { slot: ProfileSlot; url: string | null; onChange(): void; }) {
     return (
         <div className="oly-profile-image">
             <div className={`oly-preview oly-preview-${slot}`} style={url ? { backgroundImage: `url(${url})` } : undefined} />
             <div className="oly-column">
                 <strong>{slot === "avatar" ? "Photo de profil" : "Bannière"}</strong>
-                <span className="oly-muted">GIF, APNG, WebP, PNG ou JPEG</span>
+                <span className="oly-muted">GIF ou WebP pour une image animée, sinon PNG ou JPEG</span>
                 <div className="oly-row">
-                    <Button size="small" disabled={busy} onClick={() => input.current?.click()}>Changer</Button>
-                    {url && <Button size="small" variant="secondary" disabled={busy} onClick={() => apply(null)}>Retirer</Button>}
+                    <Button size="small" onClick={() => chooseProfileImage(slot, onChange)}>Changer</Button>
+                    {url && <Button size="small" variant="secondary" onClick={() => removeProfileImage(slot, onChange)}>Retirer</Button>}
                 </div>
             </div>
-            <input
-                ref={input}
-                type="file"
-                accept="image/gif,image/png,image/apng,image/webp,image/jpeg"
-                hidden
-                onChange={e => {
-                    const file = e.currentTarget.files?.[0];
-                    e.currentTarget.value = "";
-                    if (file) void apply(file);
-                }}
-            />
         </div>
     );
 }
@@ -169,6 +137,6 @@ function AccountPanel() {
 }
 
 export function SettingsPanel() {
-    const loggedIn = useAuth();
+    const loggedIn = useOlyAuth();
     return <div className="oly-settings">{loggedIn ? <AccountPanel /> : <LoginPanel />}</div>;
 }

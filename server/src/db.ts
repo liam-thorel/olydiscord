@@ -44,7 +44,7 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS files (
     id          TEXT PRIMARY KEY,           -- identifiant public, non devinable
     owner_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    kind        TEXT NOT NULL,              -- 'upload' | 'avatar' | 'banner'
+    kind        TEXT NOT NULL,              -- 'upload' | 'avatar' | 'banner' | 'guild_icon' | 'guild_banner'
     name        TEXT NOT NULL,
     mime        TEXT NOT NULL,
     size        INTEGER NOT NULL,
@@ -74,6 +74,24 @@ db.exec(`
     PRIMARY KEY (upload_id, idx)
   );
 
+  -- Jeton OAuth Discord (scope guilds) : sert uniquement à vérifier les droits d'admin d'un serveur
+  CREATE TABLE IF NOT EXISTS discord_tokens (
+    user_id       TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    access_token  TEXT NOT NULL,
+    refresh_token TEXT NOT NULL,
+    expires_at    INTEGER NOT NULL,
+    scope         TEXT NOT NULL
+  );
+
+  -- Icône / bannière Oly d'un serveur Discord
+  CREATE TABLE IF NOT EXISTS guild_profiles (
+    guild_id      TEXT PRIMARY KEY,
+    icon_file     TEXT REFERENCES files(id) ON DELETE SET NULL,
+    banner_file   TEXT REFERENCES files(id) ON DELETE SET NULL,
+    updated_by    TEXT,
+    updated_at    INTEGER NOT NULL
+  );
+
   CREATE TABLE IF NOT EXISTS profiles (
     user_id       TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     avatar_file   TEXT REFERENCES files(id) ON DELETE SET NULL,
@@ -98,7 +116,7 @@ export function transaction<T>(fn: () => T): T {
 export interface FileRow {
   id: string;
   owner_id: string;
-  kind: "upload" | "avatar" | "banner";
+  kind: "upload" | "avatar" | "banner" | "guild_icon" | "guild_banner";
   name: string;
   mime: string;
   size: number;
