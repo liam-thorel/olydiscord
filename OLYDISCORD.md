@@ -114,7 +114,34 @@ cd /root/olydiscord && git pull && cd server && docker compose --profile prod up
 | `GET /sounds?guilds=…`, `POST /sounds?name=&emoji=&guildId=`, `DELETE /sounds/:id` | Soundboard : sons perso et de serveur (ajout sur un serveur avec « Créer des expressions ») |
 | `GET /ws` (WebSocket) | Temps réel : le client s'authentifie dans son premier message, indique son salon vocal ; les sons joués sont relayés aux utilisateurs Oly du même salon (3 sons / 5 s max) |
 
-## 2. Client
+## 2. Installer chez un ami (Windows)
+
+1. Ouvrir la [dernière release](https://github.com/liam-thorel/olydiscord/releases/latest) et télécharger
+   **Installer-OLYDISCORD.cmd**.
+2. Double-cliquer dessus. Si Windows affiche un avertissement de sécurité, choisir *Exécuter* (ou *Informations complémentaires →
+   Exécuter quand même*). Discord se ferme puis se relance avec OLYDISCORD.
+3. Dans Discord : *Paramètres → Profils* → section **OLYDISCORD** → *Se connecter à OLYDISCORD*, puis autoriser dans le navigateur.
+
+Les mises à jour arrivent toutes seules (*Paramètres → Vencord → Updater*). Pour revenir au Discord normal :
+**Desinstaller-OLYDISCORD.cmd**. Pour Discord PTB ou Canary, lancer le `.cmd` depuis un terminal avec `-Branch ptb`
+(ou `canary`).
+
+Comment ça marche : à chaque modification de `main`, le workflow `.github/workflows/oly-release.yml` compile la version
+« standalone » et met à jour la release `olydiscord`. Le script `scripts/install-olydiscord.ps1` télécharge ces
+fichiers dans `%APPDATA%OLYDISCORDdist` et utilise l'installeur officiel de Vencord pour les injecter dans Discord.
+Une installation existante du Vencord officiel est remplacée.
+
+### Tester le soundboard tout seul
+
+Il faut deux comptes Discord avec OLYDISCORD dans le même salon vocal. Sans ami sous la main :
+
+1. Installer [Discord PTB](https://discord.com/download) (s'installe à côté du Discord normal) et s'y connecter avec un
+   second compte.
+2. Installer OLYDISCORD dans PTB : dans un terminal, `.Installer-OLYDISCORD.cmd -Branch ptb`.
+3. Se connecter à OLYDISCORD dans PTB, puis rejoindre le même salon vocal avec les deux comptes.
+4. Dans un des deux : bouton **Soundboard** de la barre de saisie → ajouter un son → le jouer. L'autre doit l'entendre.
+
+## 3. Compiler le client (développement)
 
 Prérequis : Node.js 22+ et pnpm (`npx pnpm@11.9.0 …` fonctionne sans l'installer).
 
