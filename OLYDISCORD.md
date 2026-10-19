@@ -13,6 +13,19 @@ grâce à un serveur que tu héberges toi-même :
 | Soundboard Oly : sons perso (utilisables partout) et sons de serveur, sans limite de boost | Les entend dans son salon vocal | N'entend rien |
 | Badge « Utilisateur OLYDISCORD » | Le voit | — |
 
+### Plugin à part : StreamFluide (désactivé par défaut)
+
+Discord ralentit son affichage quand il n'est pas la fenêtre active. Par exemple, un stream regardé sur le second écran
+tombe à quelques images/s pendant qu'on joue sur l'autre. À activer dans *Paramètres → Vencord → Plugins → StreamFluide*,
+puis **redémarrer Discord**. Trois options, à désactiver une par une pour voir laquelle compte sur ton PC :
+
+- **Toujours au premier plan** : Discord se croit toujours actif (action `WINDOW_FOCUS` réécrite). Revers : les
+  notifications du salon ouvert peuvent ne plus sonner pendant qu'on joue.
+- **Pas de bridage en arrière-plan** : `webContents.setBackgroundThrottling(false)` sur les fenêtres de Discord (Discord
+  ne le fait lui-même que pour l'overlay de jeu).
+- **Options Chromium** : `disable-renderer-backgrounding`, `disable-background-timer-throttling`,
+  `disable-backgrounding-occluded-windows`, ajoutées au lancement (`native.ts`).
+
 Rien ne passe par les serveurs de Discord : pas de faux Nitro, juste une couche en plus.
 
 ```
